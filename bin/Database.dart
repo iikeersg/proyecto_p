@@ -20,6 +20,7 @@ abstract class Database {
       await _crearDB(conn);
       await _crearTablaUsuarios(conn);
       await _crearTablaClientes(conn);
+      await _creartablaCitas(conn);
     } catch (e) {
       print(e);
     } finally {
@@ -59,8 +60,10 @@ abstract class Database {
   static _crearTablaClientes(conn) async {
     await conn.query('''CREATE TABLE IF NOT EXISTS clientes(
         idcliente INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(50) NOT NULL UNIQUE,
-        password VARCHAR(10) NOT NULL
+        nombre VARCHAR(50) NOT NULL,
+        apellido VARCHAR(50) NOT NULL,
+        password VARCHAR(10) NOT NULL,
+        numerotelefono VARCHAR(9) NOT NULL
     )''');
   }
 }
