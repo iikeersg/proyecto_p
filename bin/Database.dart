@@ -4,7 +4,7 @@ abstract class Database {
   // Propiedades
   static final String _host = 'localhost';
   static final int _port = 8889;
-  static final String _user = 'root2';
+  static final String _user = 'iker';
   static final String _password = '1234';
 
   // Métodos
@@ -30,7 +30,11 @@ abstract class Database {
 
   static Future<MySqlConnection> conexion() async {
     var settings = ConnectionSettings(
-        host: _host, port: _port, user: _user, db: 'peluqueriaDB');
+        host: _host,
+        port: _port,
+        user: _user,
+        password: _password,
+        db: 'peluqueriaDB');
 
     return await MySqlConnection.connect(settings);
   }
