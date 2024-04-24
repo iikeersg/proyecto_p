@@ -4,14 +4,14 @@ import 'package:mysql1/mysql1.dart';
 
 class Cliente {
   int? idcliente;
-  String? nombre;
+  String nombre = "s";
   String? apellido;
   String? password;
   String? numerotelefono;
 
   Cliente();
   Cliente.fromMap(ResultRow map) {
-    idcliente = map['idusuario'];
+    idcliente = map['idcliente'];
     nombre = map['nombre'];
     password = map['password'];
     apellido = map['apellido'];
@@ -40,34 +40,21 @@ class Cliente {
         cliente.nombre = nombre;
         cliente.password = password;
         await loginCliente(cliente);
-        await menu_cliente_Loged(cliente);
+        await menuClienteLoged(nombre);
 
         break;
+
       default:
-        //Crear nuevo Cliente
-        //Nombre
-        stdout.writeln("Introduzca su nombre:");
-        String nombre = stdin.readLineSync() ?? "e";
-        //Apellido
-        stdout.writeln("Introduzca su apellido:");
-        String apellido = stdin.readLineSync() ?? "e";
-        //Contraseña
-        stdout.writeln("Introduzca su nueva contraseña:");
-        String password = stdin.readLineSync() ?? "e";
-        //Numero teléfono
-        stdout.writeln("Introduzca su numero de teléfono:");
-        String numerotelefono = stdin.readLineSync() ?? "e";
-        await insertarUsuario(nombre, apellido, password, numerotelefono);
-        menuCliente();
+        crearCliente();
     }
   }
 
-  menu_cliente_Loged(cliente) async {
+  menuClienteLoged(String nombre) async {
     String? respuesta;
     int? eleccion;
     do {
       stdout.writeln("""Que desea realizar:
-1 : Pedir cita
+1 : Crear cita
 2 : Ver mis citas
 3 : Borrar mis citas
 """);
@@ -76,11 +63,20 @@ class Cliente {
     } while (eleccion != 1 && eleccion != 2 && eleccion != 3);
     switch (eleccion) {
       case 1:
-        await get(cliente);
-        print("$cliente.numerotelefono");
-
+        Cliente clienteGet = await get(nombre);
+        stdout.writeln("Introduce la fecha de tu cita");
+        String fecha = stdin.readLineSync() ?? "e";
+        crearCita(clienteGet.nombre, fecha, clienteGet.idcliente);
+        break;
+      case 2:
+        Cliente clienteGet = await get(nombre);
+        List listaCitas = await Cliente().allCitas(clienteGet.idcliente);
+        for (Cliente elemento in listaCitas) {
+          print("$elemento.nombre - $elemento.fecha ");
+        }
         break;
       default:
+        Cliente clienteGet = await get(nombre);
     }
   }
 
@@ -115,15 +111,61 @@ class Cliente {
     }
   }
 
-  get(Cliente cliente) async {
+  get(String nombre) async {
     var conn = await Database.conexion();
     try {
-      var resultado = await conn.query(
-          'SELECT * FROM clientes WHERE nombre = $nombre AND password =$password');
-      cliente = Cliente.fromMap(resultado.first);
-      return cliente;
+      var resultado =
+          await conn.query("SELECT * FROM clientes WHERE nombre = ?", [nombre]);
+      var registro = Cliente.fromMap(resultado.first);
+      return registro;
     } catch (e) {
       print(e);
+    } finally {
+      await conn.close();
+    }
+  }
+
+  allCitas(numero) async {
+    var conn = await Database.conexion();
+    try {
+      var resultado =
+          await conn.query('SELECT * FROM citas WHERE idcliente = ?', [numero]);
+      List registros = resultado.map((row) => Cliente.fromMap(row)).toList();
+      return registros;
+    } catch (e) {
+      print(e);
+    } finally {
+      await conn.close();
+    }
+  }
+
+  crearCliente() async {
+    //Crear nuevo Cliente
+    //Nombre
+    stdout.writeln("Introduzca su nombre:");
+    String nombre = stdin.readLineSync() ?? "e";
+    //Apellido
+    stdout.writeln("Introduzca su apellido:");
+    String apellido = stdin.readLineSync() ?? "e";
+    //Contraseña
+    stdout.writeln("Introduzca su nueva contraseña:");
+    String password = stdin.readLineSync() ?? "e";
+    //Numero teléfono
+    stdout.writeln("Introduzca su numero de teléfono:");
+    String numerotelefono = stdin.readLineSync() ?? "e";
+    await insertarUsuario(nombre, apellido, password, numerotelefono);
+    menuCliente();
+  }
+
+  crearCita(nombre, fecha, idcliente) async {
+    var conn = await Database.conexion();
+    try {
+      await conn.query(
+          'INSERT INTO citas (idcliente, nombre, fecha) VALUES (?,?,?)',
+          [idcliente, nombre, fecha]);
+      print('Cita creada correctamente');
+    } catch (e) {
+      print('Error al crear cita: $e');
     } finally {
       await conn.close();
     }

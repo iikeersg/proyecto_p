@@ -56,8 +56,10 @@ abstract class Database {
   static _creartablaCitas(conn) async {
     await conn.query('''CREATE TABLE IF NOT EXISTS citas(
         idcita INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(50) NOT NULL UNIQUE,
-        fecha DATETIME NOT NULL
+        idcliente INT,
+        nombre VARCHAR(50) NOT NULL,
+        fecha DATETIME NOT NULL,
+        FOREIGN KEY (idcliente) REFERENCES clientes(idcliente)
     )''');
   }
 
