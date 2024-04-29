@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'Cliente.dart';
+import 'Peluquero.dart';
 
 class App {
   static inicioApp() async {
@@ -19,6 +20,8 @@ class App {
         cliente.menuCliente();
         break;
       default:
+        Peluquero peluquero = Peluquero();
+        peluquero.menuPeluquero();
     }
   }
 }

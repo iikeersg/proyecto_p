@@ -21,6 +21,7 @@ abstract class Database {
       await _crearTablaUsuarios(conn);
       await _crearTablaClientes(conn);
       await _creartablaCitas(conn);
+      await _crearTablaPeluqueros(conn);
     } catch (e) {
       print(e);
     } finally {
@@ -71,6 +72,14 @@ abstract class Database {
         apellido VARCHAR(50) NOT NULL,
         password VARCHAR(10) NOT NULL,
         numerotelefono VARCHAR(9) NOT NULL
+    )''');
+  }
+
+  static _crearTablaPeluqueros(conn) async {
+    await conn.query('''CREATE TABLE IF NOT EXISTS peluqueros(
+        idPeluquero INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        nombrePeluquero VARCHAR(50) NOT NULL,
+        passPeluquero VARCHAR(10) NOT NULL
     )''');
   }
 }

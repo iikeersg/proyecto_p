@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 import 'Database.dart';
 import 'package:mysql1/mysql1.dart';
@@ -55,7 +54,7 @@ class Cliente {
     String? respuesta;
     int? eleccion;
     do {
-      stdout.writeln("""Que desea realizar:
+      stdout.writeln("""Hola $nombre que desea realizar:
 1 : Crear cita
 2 : Ver mis citas
 3 : Borrar mis citas
@@ -127,7 +126,10 @@ class Cliente {
       Cliente cliente2 = Cliente.fromMap(resultado.first);
       if (cliente2.password == cliente.password) {
         print("Sesión iniciada correctamente");
-      } else {}
+      } else {
+        print("error al iniciar sesión");
+        loginCliente(cliente);
+      }
     } catch (e) {
       print("Error al iniciar sesión");
       menuCliente();
