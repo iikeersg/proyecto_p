@@ -1,6 +1,8 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'Database.dart';
 import 'package:mysql1/mysql1.dart';
+import 'Cita.dart';
 
 class Cliente {
   int? idcliente;
@@ -57,26 +59,49 @@ class Cliente {
 1 : Crear cita
 2 : Ver mis citas
 3 : Borrar mis citas
+4 : Salir
 """);
       respuesta = stdin.readLineSync() ?? "e";
       eleccion = int.tryParse(respuesta);
-    } while (eleccion != 1 && eleccion != 2 && eleccion != 3);
+    } while (eleccion != 1 && eleccion != 2 && eleccion != 3 && eleccion != 4);
     switch (eleccion) {
       case 1:
+        //Crear citas
         Cliente clienteGet = await get(nombre);
-        stdout.writeln("Introduce la fecha de tu cita");
+        stdout.writeln(
+            "Introduce la fecha de tu cita en este formato *YYYY-MM-DD HH:MM:SS*");
         String fecha = stdin.readLineSync() ?? "e";
-        crearCita(clienteGet.nombre, fecha, clienteGet.idcliente);
+        await crearCita(clienteGet.nombre, clienteGet.apellido, fecha,
+            clienteGet.idcliente);
+        menuClienteLoged(nombre);
         break;
       case 2:
+        //Ver Citas
         Cliente clienteGet = await get(nombre);
         List listaCitas = await Cliente().allCitas(clienteGet.idcliente);
-        for (Cliente elemento in listaCitas) {
-          print("$elemento.nombre - $elemento.fecha ");
+        for (Cita cita in listaCitas) {
+          stdout.writeln(
+              "${cita.nombre} ${cita.apellido} tienes una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
         }
         break;
-      default:
+      case 3:
+        //Eliminar Citas
+        stdout.writeln("***TIENES ESTAS CITAS PARA BORRAR***");
+        int? numerocita;
         Cliente clienteGet = await get(nombre);
+        List listaCitas = await Cliente().allCitas(clienteGet.idcliente);
+        for (Cita cita in listaCitas) {
+          stdout.writeln(
+              "${cita.nombre} ${cita.apellido} tienes una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
+        }
+        stdout.writeln("Elige el numero de la cita que quieres borrar");
+        respuesta = stdin.readLineSync() ?? "e";
+        numerocita = int.tryParse(respuesta);
+        await eliminarCita(numerocita);
+        Cliente().menuClienteLoged(nombre);
+        break;
+      default:
+        break;
     }
   }
 
@@ -125,12 +150,12 @@ class Cliente {
     }
   }
 
-  allCitas(numero) async {
+  allCitas(idcliente) async {
     var conn = await Database.conexion();
     try {
-      var resultado =
-          await conn.query('SELECT * FROM citas WHERE idcliente = ?', [numero]);
-      List registros = resultado.map((row) => Cliente.fromMap(row)).toList();
+      var resultado = await conn
+          .query('SELECT * FROM citas WHERE idcliente = ?', [idcliente]);
+      List registros = resultado.map((row) => Cita.fromMap(row)).toList();
       return registros;
     } catch (e) {
       print(e);
@@ -157,15 +182,27 @@ class Cliente {
     menuCliente();
   }
 
-  crearCita(nombre, fecha, idcliente) async {
+  crearCita(nombre, apellido, fecha, idcliente) async {
     var conn = await Database.conexion();
     try {
       await conn.query(
-          'INSERT INTO citas (idcliente, nombre, fecha) VALUES (?,?,?)',
-          [idcliente, nombre, fecha]);
+          'INSERT INTO citas (idcliente, nombre, apellido, fecha) VALUES (?,?,?,?)',
+          [idcliente, nombre, apellido, fecha]);
       print('Cita creada correctamente');
     } catch (e) {
       print('Error al crear cita: $e');
+    } finally {
+      await conn.close();
+    }
+  }
+
+  eliminarCita(var idcita) async {
+    var conn = await Database.conexion();
+    try {
+      await conn.query('DELETE FROM citas WHERE idcita =?', [idcita]);
+      print('Cita eliminada correctamente');
+    } catch (e) {
+      print('Error al eliminar la cita cita: $e');
     } finally {
       await conn.close();
     }

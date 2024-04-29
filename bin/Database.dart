@@ -58,6 +58,7 @@ abstract class Database {
         idcita INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         idcliente INT,
         nombre VARCHAR(50) NOT NULL,
+        apellido VARCHAR(50) NOT NULL,
         fecha DATETIME NOT NULL,
         FOREIGN KEY (idcliente) REFERENCES clientes(idcliente)
     )''');
