@@ -86,6 +86,7 @@ class Peluquero {
       print('Error al ver citas: $e');
     } finally {
       await conn.close();
+      menuPeluqueroLoged(nombrePeluquero);
     }
   }
 
