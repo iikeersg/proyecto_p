@@ -60,7 +60,7 @@ abstract class Database {
         idcliente INT,
         nombre VARCHAR(50) NOT NULL,
         apellido VARCHAR(50) NOT NULL,
-        fecha DATETIME NOT NULL,
+        fecha DATETIME NOT NULL UNIQUE,
         FOREIGN KEY (idcliente) REFERENCES clientes(idcliente)
     )''');
   }

@@ -24,30 +24,8 @@ class Cliente {
   menuCliente() async {
     String? respuesta;
     int? eleccion;
-    stdout.writeln("""Que quiere realizar:
-1 : Inicio de sesión
-2 : Nuevo cliente
-        """);
-    respuesta = stdin.readLineSync() ?? "e";
-    eleccion = int.tryParse(respuesta);
-    switch (eleccion) {
-      case 1:
-        //Iniciar sesion
-        stdout.writeln("Introduzca su nombre:");
-        String nombre = stdin.readLineSync() ?? "e";
-        stdout.writeln("Introduzca su contraseña:");
-        String password = stdin.readLineSync() ?? "e";
-        Cliente cliente = Cliente();
-        cliente.nombre = nombre;
-        cliente.password = password;
-        await loginCliente(cliente);
-        await menuClienteLoged(nombre);
-
-        break;
-
-      default:
-        crearCliente();
-    }
+    eleccion = primeraPregunta(respuesta, eleccion);
+    await preguntaSwitch(eleccion);
   }
 
   menuClienteLoged(String nombre) async {
@@ -65,43 +43,52 @@ class Cliente {
     } while (eleccion != 1 && eleccion != 2 && eleccion != 3 && eleccion != 4);
     switch (eleccion) {
       case 1:
-        //Crear citas
-        Cliente clienteGet = await get(nombre);
-        stdout.writeln(
-            "Introduce la fecha de tu cita en este formato *YYYY-MM-DD HH:MM:SS*");
-        String fecha = stdin.readLineSync() ?? "e";
-        await crearCita(clienteGet.nombre, clienteGet.apellido, fecha,
-            clienteGet.idcliente);
-        menuClienteLoged(nombre);
+        await crearCitas(nombre);
         break;
       case 2:
-        //Ver Citas
-        Cliente clienteGet = await get(nombre);
-        List listaCitas = await Cliente().allCitas(clienteGet.idcliente);
-        for (Cita cita in listaCitas) {
-          stdout.writeln(
-              "${cita.nombre} ${cita.apellido} tienes una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
-        }
+        await verCitas(nombre);
         break;
       case 3:
-        //Eliminar Citas
-        stdout.writeln("***TIENES ESTAS CITAS PARA BORRAR***");
-        int? numerocita;
-        Cliente clienteGet = await get(nombre);
-        List listaCitas = await Cliente().allCitas(clienteGet.idcliente);
-        for (Cita cita in listaCitas) {
-          stdout.writeln(
-              "${cita.nombre} ${cita.apellido} tienes una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
-        }
-        stdout.writeln("Elige el numero de la cita que quieres borrar");
-        respuesta = stdin.readLineSync() ?? "e";
-        numerocita = int.tryParse(respuesta);
-        await eliminarCita(numerocita);
-        Cliente().menuClienteLoged(nombre);
+        await eliminarCitas(nombre, respuesta);
         break;
       default:
         break;
     }
+  }
+
+  eliminarCitas(String nombre, String? respuesta) async {
+    stdout.writeln("***TIENES ESTAS CITAS PARA BORRAR***");
+    int? numerocita;
+    Cliente clienteGet = await get(nombre);
+    List listaCitas = await Cliente().allCitas(clienteGet.idcliente);
+    for (Cita cita in listaCitas) {
+      stdout.writeln(
+          "${cita.nombre} ${cita.apellido} tienes una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
+    }
+    stdout.writeln("Elige el numero de la cita que quieres borrar");
+    respuesta = stdin.readLineSync() ?? "e";
+    numerocita = int.tryParse(respuesta);
+    await eliminarCita(numerocita);
+    Cliente().menuClienteLoged(nombre);
+  }
+
+  verCitas(String nombre) async {
+    Cliente clienteGet = await get(nombre);
+    List listaCitas = await Cliente().allCitas(clienteGet.idcliente);
+    for (Cita cita in listaCitas) {
+      stdout.writeln(
+          "${cita.nombre} ${cita.apellido} tienes una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
+    }
+  }
+
+  crearCitas(String nombre) async {
+    Cliente clienteGet = await get(nombre);
+    stdout.writeln(
+        "Introduce la fecha de tu cita en este formato *YYYY-MM-DD HH:MM:SS*");
+    String fecha = stdin.readLineSync() ?? "e";
+    await crearCita(
+        clienteGet.nombre, clienteGet.apellido, fecha, clienteGet.idcliente);
+    menuClienteLoged(nombre);
   }
 
   insertarUsuario(nombre, apellido, password, numerotelefono) async {
@@ -208,5 +195,38 @@ class Cliente {
     } finally {
       await conn.close();
     }
+  }
+
+  preguntaSwitch(int? eleccion) async {
+    switch (eleccion) {
+      case 1:
+        //Iniciar sesion
+        stdout.writeln("Introduzca su nombre:");
+        String nombre = stdin.readLineSync() ?? "e";
+        stdout.writeln("Introduzca su contraseña:");
+        String password = stdin.readLineSync() ?? "e";
+        Cliente cliente = Cliente();
+        cliente.nombre = nombre;
+        cliente.password = password;
+        await loginCliente(cliente);
+        await menuClienteLoged(nombre);
+
+        break;
+
+      default:
+        crearCliente();
+    }
+  }
+
+  primeraPregunta(String? respuesta, int? eleccion) {
+    do {
+      stdout.writeln("""Que quiere realizar:
+1 : Inicio de sesión
+2 : Nuevo cliente
+        """);
+      respuesta = stdin.readLineSync() ?? "e";
+      eleccion = int.tryParse(respuesta);
+    } while (eleccion != 1 && eleccion != 2);
+    return eleccion;
   }
 }
