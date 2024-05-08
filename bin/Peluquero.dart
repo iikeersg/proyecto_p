@@ -53,36 +53,43 @@ class Peluquero {
     switch (eleccion) {
       case 1:
         //cambiar citas
-        int? idcliente;
-        stdout.writeln("A que cliente le quieres cambiar la cita");
-        respuesta = stdin.readLineSync() ?? "e";
-        idcliente = int.tryParse(respuesta);
-        cambiarCita(idcliente);
+
+        cambiarCita();
         break;
 
       case 2:
         //ver citas
-        int? idcliente;
-        DateTime? diacita;
-        stdout.writeln("De que dia quieres ver la cita:");
-        respuesta = stdin.readLineSync() ?? "e";
-        diacita = DateTime.tryParse(respuesta);
-        try {
-          List listacitas = await todasLasCitasPorFecha(diacita);
-          for (Cita cita in listacitas) {
-            stdout.writeln(
-                "En el dia ${cita.fecha} tiene esta cita ${cita.idcita} y este cliente ${cita.nombre}");
-          }
-        } catch (e) {
-          print('Error al ver citas: $e');
-        } finally {}
+        await imprimirCitasDia();
+        break;
 
       default:
     }
   }
 
-  todasLasCitasPorFecha(DateTime? diacita) async {
+  imprimirCitasDia() async {
+    String? diacita;
+    stdout.writeln("De que dia quieres ver la cita:");
+    diacita = stdin.readLineSync() ?? "e";
     var conn = await Database.conexion();
+    try {
+      List listacitas = await todasLasCitasPorFecha(diacita, conn);
+
+      if (listacitas.length == 0) {
+        print("No hay citas ese día");
+      } else {
+        for (Cita cita in listacitas) {
+          stdout.writeln(
+              "En el dia ${cita.fecha} tiene esta cita ${cita.idcita} y este cliente ${cita.nombre}");
+        }
+      }
+    } catch (e) {
+      print('Error al ver citas: $e');
+    } finally {
+      await conn.close();
+    }
+  }
+
+  todasLasCitasPorFecha(String? diacita, conn) async {
     var resultado =
         await conn.query('SELECT * FROM citas WHERE fecha =?', [diacita]);
     List registros = resultado.map((row) => Cita.fromMap(row)).toList();
@@ -104,7 +111,7 @@ class Peluquero {
         menuPeluquero();
       }
     } catch (e) {
-      print("Error al iniciar sesión");
+      print("Error al iniciar sesión $e");
       menuPeluquero();
     } finally {
       await conn.close();
@@ -137,31 +144,42 @@ class Peluquero {
     }
   }
 
-  cambiarCita(idcliente) async {
+  cambiarCita() async {
     String? respuesta;
     int? citacambiar;
     String? fecha;
-    List listaCitas = await Cliente().allCitas(idcliente);
-    Cita cita = Cita();
-    for (Cita cita in listaCitas) {
-      stdout.writeln(
-          "El cliente ${cita.nombre} ${cita.apellido} tiene una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
-    }
-    stdout.writeln("Que cita quiere cambiar, escriba su *id* :");
+    int? idcliente;
+    stdout.writeln("A que cliente le quieres cambiar la cita");
     respuesta = stdin.readLineSync() ?? "e";
-    citacambiar = int.tryParse(respuesta);
-    stdout.writeln("Elija la nueva fecha y hora *YYYY-MM-DD HH:MM:SS*:");
-    fecha = stdin.readLineSync() ?? "e";
+    idcliente = int.tryParse(respuesta);
+    List listaCitas = await Cliente().allCitas(idcliente);
+    if (listaCitas.length == 0) {
+      stdout.writeln("El cliente con $idcliente no tiene citas ");
+      cambiarCita();
+    } else {
+      for (Cita cita in listaCitas) {
+        stdout.writeln(
+            "El cliente ${cita.nombre} ${cita.apellido} tiene una cita el dia ${cita.fecha} el id de la cita es ${cita.idcita}");
+      }
+      stdout.writeln("Que cita quiere cambiar, escriba su *id* :");
+      respuesta = stdin.readLineSync() ?? "e";
+      citacambiar = int.tryParse(respuesta);
+      stdout.writeln("Elija la nueva fecha y hora *YYYY-MM-DD HH:MM:SS*:");
+      fecha = stdin.readLineSync() ?? "e";
 
-    var conn = await Database.conexion();
-    try {
-      await conn.query("UPDATE citas SET fecha = (?) WHERE idcita = (?)",
-          [fecha, citacambiar]);
-      stdout.writeln("Cita cambiada con exito");
-    } catch (e) {
-      print(e);
-    } finally {
-      await conn.close();
+      var conn = await Database.conexion();
+      try {
+        await conn.query("UPDATE citas SET fecha = (?) WHERE idcita = (?)",
+            [fecha, citacambiar]);
+        stdout.writeln("Cita cambiada con exito");
+        menuPeluqueroLoged(nombrePeluquero);
+      } catch (e) {
+        print(e);
+        stdout.writeln("Error al cambiar la cita");
+        menuPeluqueroLoged(nombrePeluquero);
+      } finally {
+        await conn.close();
+      }
     }
   }
 
